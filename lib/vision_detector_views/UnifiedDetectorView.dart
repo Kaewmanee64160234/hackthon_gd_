@@ -1,10 +1,12 @@
 import 'package:camera/camera.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:google_ml_kit/google_ml_kit.dart';
 import 'package:google_mlkit_object_detection/google_mlkit_object_detection.dart';
 import 'package:google_mlkit_pose_detection/google_mlkit_pose_detection.dart';
 import 'package:hackathon/vision_detector_views/painters/object_detector_painter.dart';
 import 'package:hackathon/vision_detector_views/painters/pose_painter.dart';
+import 'package:hackathon/vision_detector_views/painters/segmentation_painter.dart';
 import 'package:hackathon/vision_detector_views/utils.dart';
 import 'dart:typed_data';
 import 'package:image/image.dart' as img;
@@ -19,6 +21,10 @@ class _UnifiedDetectorViewState extends State<UnifiedDetectorView> {
   final PoseDetector _poseDetector =
       PoseDetector(options: PoseDetectorOptions());
   ObjectDetector? _objectDetector;
+  final SelfieSegmenter _segmenter = SelfieSegmenter(
+    mode: SegmenterMode.stream,
+    enableRawSizeMask: true,
+  );
   bool _isBusy = false;
   CustomPaint? _customPaint;
   var _cameraLensDirection = CameraLensDirection.back;
@@ -105,13 +111,25 @@ class _UnifiedDetectorViewState extends State<UnifiedDetectorView> {
           _cameraLensDirection,
         );
 
+        //selfie segmenter
+        final mask = await _segmenter.processImage(inputImage);
+
+        // TODO: Fix SegmentationPainter to rescale on top of camera feed.
+        final segmentationPainter = SegmentationPainter(
+          mask!,
+          inputImage.metadata!.size,
+          inputImage.metadata!.rotation,
+          _cameraLensDirection,
+        );
+
         // Calculate the height of the person
-        _calculatePersonHeight(poses, objects, inputImage);
+        _calculatePersonHeight(poses, objects, inputImage, mask);
 
         // Combine the painters
         setState(() {
-          _customPaint =
-              CustomPaint(painter: CombinedPainter(objectPainter, posePainter));
+          _customPaint = CustomPaint(
+              painter: CombinedPainter(
+                  objectPainter, posePainter, segmentationPainter));
         });
       } catch (e) {
         print('Error processing image: $e');
@@ -121,8 +139,9 @@ class _UnifiedDetectorViewState extends State<UnifiedDetectorView> {
     }
   }
 
-  void _calculatePersonHeight(
-      List<Pose> poses, List<DetectedObject> objects, InputImage inputImage) {
+  void _calculatePersonHeight(List<Pose> poses, List<DetectedObject> objects,
+      InputImage inputImage, SegmentationMask mask) {
+    var height = mask.height;
     if (poses.isNotEmpty && objects.isNotEmpty) {
       final pose = poses.first;
       final landmarks = pose.landmarks;
@@ -209,11 +228,14 @@ class _UnifiedDetectorViewState extends State<UnifiedDetectorView> {
 class CombinedPainter extends CustomPainter {
   final ObjectDetectorPainter objectPainter;
   final PosePainter posePainter;
+  final SegmentationPainter segmentationPainter;
 
-  CombinedPainter(this.objectPainter, this.posePainter);
+  CombinedPainter(
+      this.objectPainter, this.posePainter, this.segmentationPainter);
 
   @override
   void paint(Canvas canvas, Size size) {
+    segmentationPainter.paint(canvas, size);
     objectPainter.paint(canvas, size);
     posePainter.paint(canvas, size);
   }
