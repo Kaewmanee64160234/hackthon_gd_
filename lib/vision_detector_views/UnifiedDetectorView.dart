@@ -23,7 +23,7 @@ class _UnifiedDetectorViewState extends State<UnifiedDetectorView> {
   CustomPaint? _customPaint;
   var _cameraLensDirection = CameraLensDirection.back;
 
-  final double _ballDiameterCm = 23.8;
+  final double _ballDiameterCm = 24;
   double _pixelsPerCm = 0.0;
   double _personHeightCm = 0.00;
   @override
@@ -146,7 +146,8 @@ class _UnifiedDetectorViewState extends State<UnifiedDetectorView> {
         // Find the ball object
         for (var object in objects) {
           for (var label in object.labels) {
-            if (label.text == 'Ball') {
+            if (label.text.toLowerCase() == 'ball' ||
+                label.text.toLowerCase() == 'basketball') {
               final ballBoundingBox = object.boundingBox;
               final ballHeightInPixels = ballBoundingBox.height;
 
@@ -173,8 +174,7 @@ class _UnifiedDetectorViewState extends State<UnifiedDetectorView> {
               _personHeightCm = shoulderToAnkleCm +
                   hipToAnkleCm +
                   shoulderToHipCm +
-                  noseToShoulderCm +
-                  noseToTopOfHead;
+                  noseToShoulderCm;
 
               setState(() {});
               return;
