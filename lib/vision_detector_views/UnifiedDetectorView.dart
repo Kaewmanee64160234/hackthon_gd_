@@ -21,10 +21,7 @@ class _UnifiedDetectorViewState extends State<UnifiedDetectorView> {
   final PoseDetector _poseDetector =
       PoseDetector(options: PoseDetectorOptions());
   ObjectDetector? _objectDetector;
-  final SelfieSegmenter _segmenter = SelfieSegmenter(
-    mode: SegmenterMode.stream,
-    enableRawSizeMask: true,
-  );
+
   bool _isBusy = false;
   CustomPaint? _customPaint;
   var _cameraLensDirection = CameraLensDirection.back;
@@ -111,25 +108,13 @@ class _UnifiedDetectorViewState extends State<UnifiedDetectorView> {
           _cameraLensDirection,
         );
 
-        //selfie segmenter
-        final mask = await _segmenter.processImage(inputImage);
-
-        // TODO: Fix SegmentationPainter to rescale on top of camera feed.
-        final segmentationPainter = SegmentationPainter(
-          mask!,
-          inputImage.metadata!.size,
-          inputImage.metadata!.rotation,
-          _cameraLensDirection,
-        );
-
         // Calculate the height of the person
-        _calculatePersonHeight(poses, objects, inputImage, mask);
+        _calculatePersonHeight(poses, objects, inputImage);
 
         // Combine the painters
         setState(() {
-          _customPaint = CustomPaint(
-              painter: CombinedPainter(
-                  objectPainter, posePainter, segmentationPainter));
+          _customPaint =
+              CustomPaint(painter: CombinedPainter(objectPainter, posePainter));
         });
       } catch (e) {
         print('Error processing image: $e');
@@ -139,34 +124,42 @@ class _UnifiedDetectorViewState extends State<UnifiedDetectorView> {
     }
   }
 
-  void _calculatePersonHeight(List<Pose> poses, List<DetectedObject> objects,
-      InputImage inputImage, SegmentationMask mask) {
-    var height = mask.height;
-    if (poses.isNotEmpty && objects.isNotEmpty) {
+  void _calculatePersonHeight(
+      List<Pose> poses, List<DetectedObject> objects, InputImage inputImage) {
+    _personHeightCm = 0.0; // Reset height to zero initially
+
+    if (poses.isNotEmpty) {
       final pose = poses.first;
       final landmarks = pose.landmarks;
 
       // Check if required landmarks are present
-      if (landmarks.containsKey(PoseLandmarkType.leftShoulder) &&
+      if (landmarks.containsKey(PoseLandmarkType.leftHeel) &&
           landmarks.containsKey(PoseLandmarkType.leftAnkle) &&
           landmarks.containsKey(PoseLandmarkType.leftHip) &&
-          landmarks.containsKey(PoseLandmarkType.nose)) {
-        final leftShoulder = landmarks[PoseLandmarkType.leftShoulder]!;
+          landmarks.containsKey(PoseLandmarkType.leftShoulder) &&
+          landmarks.containsKey(PoseLandmarkType.leftMouth) &&
+          landmarks.containsKey(PoseLandmarkType.leftEye)) {
+        final leftToe = landmarks[PoseLandmarkType.leftHeel]!;
         final leftAnkle = landmarks[PoseLandmarkType.leftAnkle]!;
         final leftHip = landmarks[PoseLandmarkType.leftHip]!;
-        final nose = landmarks[PoseLandmarkType.nose]!;
+        final leftShoulder = landmarks[PoseLandmarkType.leftShoulder]!;
+        final mouthCenter = landmarks[PoseLandmarkType.leftMouth]!;
+        final leftEye = landmarks[PoseLandmarkType.leftEye]!;
 
-        // Calculate distances in pixels
-        final shoulderToAnkle = leftAnkle.y - leftShoulder.y;
-        final hipToAnkle = leftAnkle.y - leftHip.y;
-        final shoulderToHip = leftHip.y - leftShoulder.y;
-        final noseToShoulder = leftShoulder.y - nose.y;
+        // Calculate distances in pixels using absolute values
+        final toeToAnkle = (leftAnkle.y - leftToe.y).abs();
+        final ankleToHip = (leftHip.y - leftAnkle.y).abs();
+        final hipToShoulder = (leftShoulder.y - leftHip.y).abs();
+        final shoulderToMouthCenter = (mouthCenter.y - leftShoulder.y).abs();
+        final mouthToLeftEye = (leftEye.y - mouthCenter.y).abs();
 
-        // Find the ball object
+        bool foundBall = false;
+
+        // Find an object to use as a scale reference, e.g., a known ball size
         for (var object in objects) {
           for (var label in object.labels) {
-            if (label.text.toLowerCase() == 'ball' ||
-                label.text.toLowerCase() == 'basketball') {
+            if (label.text.toLowerCase().contains('ball')) {
+              foundBall = true;
               final ballBoundingBox = object.boundingBox;
               final ballHeightInPixels = ballBoundingBox.height;
 
@@ -174,34 +167,29 @@ class _UnifiedDetectorViewState extends State<UnifiedDetectorView> {
               _pixelsPerCm = ballHeightInPixels / _ballDiameterCm;
 
               // Calculate heights in cm
-              final shoulderToAnkleCm = shoulderToAnkle / _pixelsPerCm;
-              final hipToAnkleCm = hipToAnkle / _pixelsPerCm;
-              final shoulderToHipCm = shoulderToHip / _pixelsPerCm;
-              final noseToShoulderCm = noseToShoulder / _pixelsPerCm;
-
-              // Assuming the top of the head is within the bounding box of the head object
-              double noseToTopOfHead = 0;
-              for (var headObject in objects) {
-                if (headObject.boundingBox.contains(Offset(nose.x, nose.y))) {
-                  noseToTopOfHead =
-                      (nose.y - headObject.boundingBox.top) / _pixelsPerCm;
-                  break;
-                }
-              }
+              final toeToAnkleCm = toeToAnkle / _pixelsPerCm;
+              final ankleToHipCm = ankleToHip / _pixelsPerCm;
+              final hipToShoulderCm = hipToShoulder / _pixelsPerCm;
+              final shoulderToMouthCenterCm =
+                  shoulderToMouthCenter / _pixelsPerCm;
+              final mouthToLeftEyeCm = mouthToLeftEye / _pixelsPerCm;
 
               // Summing up the parts to get the total height
-              _personHeightCm = shoulderToAnkleCm +
-                  hipToAnkleCm +
-                  shoulderToHipCm +
-                  noseToShoulderCm;
+              _personHeightCm = toeToAnkleCm +
+                  ankleToHipCm +
+                  hipToShoulderCm +
+                  shoulderToMouthCenterCm +
+                  (mouthToLeftEyeCm *
+                      2); // Assuming distance to top of head is similar to eye to mouth distance
 
-              setState(() {});
-              return;
+              break; // Break after calculating with the found ball
             }
           }
+          if (foundBall) break; // Exit outer loop if ball found
         }
       }
     }
+    setState(() {});
   }
 
   Map<String, dynamic> cropImageFromBoundingBoxAndCalculateHeight(
@@ -228,14 +216,11 @@ class _UnifiedDetectorViewState extends State<UnifiedDetectorView> {
 class CombinedPainter extends CustomPainter {
   final ObjectDetectorPainter objectPainter;
   final PosePainter posePainter;
-  final SegmentationPainter segmentationPainter;
 
-  CombinedPainter(
-      this.objectPainter, this.posePainter, this.segmentationPainter);
+  CombinedPainter(this.objectPainter, this.posePainter);
 
   @override
   void paint(Canvas canvas, Size size) {
-    segmentationPainter.paint(canvas, size);
     objectPainter.paint(canvas, size);
     posePainter.paint(canvas, size);
   }
