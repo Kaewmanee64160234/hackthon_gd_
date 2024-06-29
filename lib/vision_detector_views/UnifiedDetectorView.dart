@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:camera/camera.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:google_ml_kit/google_ml_kit.dart';
 import 'package:google_mlkit_object_detection/google_mlkit_object_detection.dart';
 import 'package:google_mlkit_pose_detection/google_mlkit_pose_detection.dart';
 import 'package:hackathon/vision_detector_views/painters/object_detector_painter.dart';
@@ -21,6 +22,7 @@ class _UnifiedDetectorViewState extends State<UnifiedDetectorView> {
   final PoseDetector _poseDetector =
       PoseDetector(options: PoseDetectorOptions());
   ObjectDetector? _objectDetector;
+
   bool _isBusy = false;
   CustomPaint? _customPaint;
   var _cameraLensDirection = CameraLensDirection.back;
@@ -240,6 +242,7 @@ class _UnifiedDetectorViewState extends State<UnifiedDetectorView> {
     } else {
       print("No poses or objects detected.");
     }
+    setState(() {});
   }
 
   Map<String, dynamic> cropImageFromBoundingBoxAndCalculateHeight(
