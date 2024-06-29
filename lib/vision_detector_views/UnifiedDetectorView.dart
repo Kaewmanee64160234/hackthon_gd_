@@ -44,52 +44,42 @@ class _UnifiedDetectorViewState extends State<UnifiedDetectorView> {
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        DetectorView(
-          title: 'Unified Detector',
-          customPaint: _customPaint,
-          text: 'Detection Results',
-          onImage: _processImage,
-          initialCameraLensDirection: _cameraLensDirection,
-          onCameraLensDirectionChanged: (value) => setState(() {
-            _cameraLensDirection = value;
-          }),
-        ),
-        Positioned(
-          bottom: 0,
-          left: 0,
-          right: 0,
-          top: 100,
-          child: Container(
-            height: 200, // Adjust as necessary
-            padding: EdgeInsets.all(10),
-            child: ListView(
-              children: distancesInCm.entries
-                  .map((entry) => Text(
-                        '${entry.key}: ${entry.value.toStringAsFixed(2)} cm',
-                        style: TextStyle(color: Colors.white, fontSize: 16),
-                      ))
-                  .toList(),
+    return Scaffold(
+      body: Stack(
+        children: [
+          // Background camera and detections view
+
+          DetectorView(
+            title: 'Unified Detector',
+            customPaint: _customPaint,
+            text: 'Detection Results',
+            onImage: _processImage,
+            initialCameraLensDirection: _cameraLensDirection,
+            onCameraLensDirectionChanged: (value) => setState(() {
+              _cameraLensDirection = value;
+            }),
+          ),
+          // Measurements display
+          Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            child: Container(
+              height: 200, // Adjust height as necessary
+              padding: EdgeInsets.all(10),
+              color: Colors.black.withOpacity(0.7), // Semi-transparent
+              child: ListView(
+                children: distancesInCm.entries
+                    .map((entry) => Text(
+                          '${entry.key}: ${entry.value.toStringAsFixed(2)} cm',
+                          style: TextStyle(color: Colors.white, fontSize: 16),
+                        ))
+                    .toList(),
+              ),
             ),
           ),
-        ),
-        //show Height(
-        Positioned(
-          bottom: 0,
-          left: 0,
-          right: 0,
-          top: 100,
-          child: Container(
-            height: 200, // Adjust as necessary
-            padding: EdgeInsets.all(10),
-            child: Text(
-              'Person Height: ${_personHeightCm.toStringAsFixed(2)} cm',
-              style: TextStyle(color: Colors.white, fontSize: 16),
-            ),
-          ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -148,28 +138,11 @@ class _UnifiedDetectorViewState extends State<UnifiedDetectorView> {
 
   void calculateSpecificDistances(
       List<Pose> poses, List<DetectedObject> objects, InputImage inputImage) {
-    if (poses.isNotEmpty && objects.isNotEmpty) {
+    if (poses.isNotEmpty) {
       final pose = poses.first;
       final landmarks = pose.landmarks;
 
-      Map<String, List<PoseLandmarkType>> landmarkPairs = {
-        'Ankle to Knee': [PoseLandmarkType.leftHeel, PoseLandmarkType.leftKnee],
-        'Knee to Hip': [PoseLandmarkType.leftKnee, PoseLandmarkType.leftHip],
-        'Hip to Shoulder': [
-          PoseLandmarkType.leftHip,
-          PoseLandmarkType.leftShoulder
-        ],
-        'Shoulder to Ear': [
-          PoseLandmarkType.leftShoulder,
-          PoseLandmarkType.leftEar
-        ],
-        'Mouth to Eye': [PoseLandmarkType.leftMouth, PoseLandmarkType.leftEye],
-      };
-
-      // Reset total height in pixels
-      double totalHeightInPixels = 0;
-
-      // Check for the object used for scaling
+      // Check for the scaling object first
       for (var object in objects) {
         for (var label in object.labels) {
           if (label.text.toLowerCase().contains('ball')) {
@@ -177,43 +150,93 @@ class _UnifiedDetectorViewState extends State<UnifiedDetectorView> {
             final ballDiameterInPixels =
                 min(ballBoundingBox.height, ballBoundingBox.width);
             _pixelsPerCm = ballDiameterInPixels / _ballDiameterCm;
-            print('Calculated _pixelsPerCm: $_pixelsPerCm');
+            print('Calculated _pixelsPerCm: $_pixelsPerCm ');
             break;
           }
         }
       }
 
-      // Calculate the distances and sum them in pixels
-      landmarkPairs.forEach((description, landmarksList) {
-        if (landmarks.containsKey(landmarksList[0]) &&
-            landmarks.containsKey(landmarksList[1])) {
-          final point1 = landmarks[landmarksList[0]]!;
-          final point2 = landmarks[landmarksList[1]]!;
-          double distanceInPixels = calculateEuclideanDistance(
-              Point(point1.x, point1.y), Point(point2.x, point2.y));
+      // Extract landmark coordinates
+      Point<double> leftAnkle = Point(landmarks[PoseLandmarkType.leftAnkle]!.x,
+          landmarks[PoseLandmarkType.leftAnkle]!.y);
+      Point<double> rightAnkle = Point(
+          landmarks[PoseLandmarkType.rightAnkle]!.x,
+          landmarks[PoseLandmarkType.rightAnkle]!.y);
+      Point<double> leftKnee = Point(landmarks[PoseLandmarkType.leftKnee]!.x,
+          landmarks[PoseLandmarkType.leftKnee]!.y);
+      Point<double> rightKnee = Point(landmarks[PoseLandmarkType.rightKnee]!.x,
+          landmarks[PoseLandmarkType.rightKnee]!.y);
+      Point<double> leftHip = Point(landmarks[PoseLandmarkType.leftHip]!.x,
+          landmarks[PoseLandmarkType.leftHip]!.y);
+      Point<double> rightHip = Point(landmarks[PoseLandmarkType.rightHip]!.x,
+          landmarks[PoseLandmarkType.rightHip]!.y);
+      Point<double> leftShoulder = Point(
+          landmarks[PoseLandmarkType.leftShoulder]!.x,
+          landmarks[PoseLandmarkType.leftShoulder]!.y);
+      Point<double> rightShoulder = Point(
+          landmarks[PoseLandmarkType.rightShoulder]!.x,
+          landmarks[PoseLandmarkType.rightShoulder]!.y);
+      Point<double> nose = Point(landmarks[PoseLandmarkType.nose]!.x,
+          landmarks[PoseLandmarkType.nose]!.y);
+      Point<double> leftMouth = Point(landmarks[PoseLandmarkType.leftMouth]!.x,
+          landmarks[PoseLandmarkType.leftMouth]!.y);
+      Point<double> leftEye = Point(landmarks[PoseLandmarkType.leftEye]!.x,
+          landmarks[PoseLandmarkType.leftEye]!.y);
 
-          // Accumulate total height in pixels
-          totalHeightInPixels += distanceInPixels;
+      // Calculate distances directly between relevant points
+      double distanceLeftAnkleKnee =
+          calculateEuclideanDistance(leftAnkle, leftKnee);
+      double distanceRightAnkleKnee =
+          calculateEuclideanDistance(rightAnkle, rightKnee);
+      double distanceLeftKneeHip =
+          calculateEuclideanDistance(leftKnee, leftHip);
+      double distanceRightKneeHip =
+          calculateEuclideanDistance(rightKnee, rightHip);
+      double distanceLeftHipShoulder =
+          calculateEuclideanDistance(leftHip, leftShoulder);
+      double distanceRightHipShoulder =
+          calculateEuclideanDistance(rightHip, rightShoulder);
+      double distanceNoseShoulder = calculateEuclideanDistance(
+          nose, leftShoulder); // Assuming left shoulder as reference
+      double distanceMouthEye = calculateEuclideanDistance(leftMouth, leftEye);
 
-          // Store distances in cm for display
-          distancesInCm[description] = distanceInPixels / _pixelsPerCm;
-        } else {
-          print("Required landmarks not found for $description.");
-        }
-      });
+      // Calculate average distances for symmetry
+      double averageAnkleKnee =
+          (distanceLeftAnkleKnee + distanceRightAnkleKnee) / 2;
+      double averageKneeHip = (distanceLeftKneeHip + distanceRightKneeHip) / 2;
+      double averageHipShoulder =
+          (distanceLeftHipShoulder + distanceRightHipShoulder) / 2;
 
-      // Convert total pixels to centimeters and update state
-      if (_pixelsPerCm > 0) {
-        double totalHeightInCm = totalHeightInPixels / _pixelsPerCm;
-        setState(() {
-          _personHeightCm = totalHeightInCm;
-          print(
-              "Total height calculated: ${_personHeightCm.toStringAsFixed(2)} cm");
-        });
-      } else {
-        print(
-            "Scaling factor (pixels per cm) not set. Cannot compute total height in cm.");
-      }
+      // Total height estimation
+      double totalDistance = averageAnkleKnee +
+          averageKneeHip +
+          averageHipShoulder +
+          distanceNoseShoulder +
+          distanceMouthEye;
+
+      // Convert to real-world units
+      totalDistance /= _pixelsPerCm;
+
+      // Save distances in cm
+      distancesInCm['Left Ankle to Left Knee'] =
+          distanceLeftAnkleKnee / _pixelsPerCm;
+      distancesInCm['Right Ankle to Right Knee'] =
+          distanceRightAnkleKnee / _pixelsPerCm;
+      distancesInCm['Left Knee to Left Hip'] =
+          distanceLeftKneeHip / _pixelsPerCm;
+      distancesInCm['Right Knee to Right Hip'] =
+          distanceRightKneeHip / _pixelsPerCm;
+      distancesInCm['Left Hip to Left Shoulder'] =
+          distanceLeftHipShoulder / _pixelsPerCm;
+      distancesInCm['Right Hip to Right Shoulder'] =
+          distanceRightHipShoulder / _pixelsPerCm;
+      distancesInCm['Nose to Shoulder'] = distanceNoseShoulder / _pixelsPerCm;
+      distancesInCm['Mouth to Eye'] = distanceMouthEye / _pixelsPerCm;
+      distancesInCm['Total Body Height'] = totalDistance;
+
+      // Print or update state with the total distance
+      _personHeightCm = totalDistance;
+      print("Estimated height: ${_personHeightCm.toStringAsFixed(2)} cm");
     } else {
       print("No poses or objects detected.");
     }

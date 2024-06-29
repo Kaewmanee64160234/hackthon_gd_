@@ -28,25 +28,11 @@ class Home extends StatelessWidget {
         centerTitle: true,
         elevation: 0,
       ),
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16),
-              child: Column(
-                children: [
-                  ExpansionTile(
-                    title: const Text('Vision APIs'),
-                    children: [
-                      CustomCard('Object Detection', ObjectDetectorView()),
-                      CustomCard('Pose Detection', PoseDetectorView()),
-                      CustomCard('Hello', UnifiedDetectorView())
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
+      body: Center(
+        child: Padding(
+          padding: EdgeInsets.all(10),
+          child: Container(
+              child: CustomCard('Height Measurement', UnifiedDetectorView())),
         ),
       ),
     );
