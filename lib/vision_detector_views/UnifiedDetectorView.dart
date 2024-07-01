@@ -28,7 +28,7 @@ class _UnifiedDetectorViewState extends State<UnifiedDetectorView> {
   var _cameraLensDirection = CameraLensDirection.back;
   Map<String, double> distancesInCm = {};
 
-  final double _ballDiameterCm = 23.8;
+  final double _ballDiameterCm = 20.5;
   double _pixelsPerCm = 0.0;
   double _personHeightCm = 0.00;
   @override
@@ -138,6 +138,13 @@ class _UnifiedDetectorViewState extends State<UnifiedDetectorView> {
     return sqrt(pow(point2.x - point1.x, 2) + pow(point2.y - point1.y, 2));
   }
 
+  ////////////////////////////ลอง/////////////////////////////////////
+
+  double calculateVerticalDistance(Point<double> point1, Point<double> point2) {
+    // Calculate the vertical distance between two points
+    return (point2.y - point1.y).abs();
+  }
+
   void calculateSpecificDistances(
       List<Pose> poses, List<DetectedObject> objects, InputImage inputImage) {
     if (poses.isNotEmpty) {
@@ -147,7 +154,8 @@ class _UnifiedDetectorViewState extends State<UnifiedDetectorView> {
       // Check for the scaling object first
       for (var object in objects) {
         for (var label in object.labels) {
-          if (label.text.toLowerCase().contains('ball')) {
+          if (label.text.toLowerCase() == 'ball') {
+            // ตรวจสอบเฉพาะคำว่า 'ball' เท่านั้น
             final ballBoundingBox = object.boundingBox;
             final ballDiameterInPixels =
                 min(ballBoundingBox.height, ballBoundingBox.width);
@@ -186,6 +194,7 @@ class _UnifiedDetectorViewState extends State<UnifiedDetectorView> {
           landmarks[PoseLandmarkType.leftEye]!.y);
 
       // Calculate distances directly between relevant points
+      //
       double distanceLeftAnkleKnee =
           calculateEuclideanDistance(leftAnkle, leftKnee);
       double distanceRightAnkleKnee =
@@ -198,9 +207,15 @@ class _UnifiedDetectorViewState extends State<UnifiedDetectorView> {
           calculateEuclideanDistance(leftHip, leftShoulder);
       double distanceRightHipShoulder =
           calculateEuclideanDistance(rightHip, rightShoulder);
-      double distanceNoseShoulder = calculateEuclideanDistance(
-          nose, leftShoulder); // Assuming left shoulder as reference
-      double distanceMouthEye = calculateEuclideanDistance(leftMouth, leftEye);
+      double distanceNoseShoulder = calculateVerticalDistance(
+          nose, leftShoulder); // Using vertical distance
+      double distanceMouthEye = calculateVerticalDistance(
+          leftMouth, leftEye); // Using vertical distance
+      // double distanceNoseShoulder = calculateEuclideanDistance(
+      //     nose, leftShoulder); // Assuming left shoulder as reference
+      // double distanceMouthEye = calculateEuclideanDistance(leftMouth, leftEye);
+      double distanceNoseToEye = calculateVerticalDistance(nose, leftEye);
+      double distanceEyeToTopOfHead = distanceNoseToEye * 2;
 
       // Calculate average distances for symmetry
       double averageAnkleKnee =
@@ -214,8 +229,8 @@ class _UnifiedDetectorViewState extends State<UnifiedDetectorView> {
           averageKneeHip +
           averageHipShoulder +
           distanceNoseShoulder +
-          distanceMouthEye;
-
+          distanceMouthEye +
+          distanceEyeToTopOfHead; // Add this line
       // Convert to real-world units
       totalDistance /= _pixelsPerCm;
 
@@ -234,7 +249,14 @@ class _UnifiedDetectorViewState extends State<UnifiedDetectorView> {
           distanceRightHipShoulder / _pixelsPerCm;
       distancesInCm['Nose to Shoulder'] = distanceNoseShoulder / _pixelsPerCm;
       distancesInCm['Mouth to Eye'] = distanceMouthEye / _pixelsPerCm;
-      distancesInCm['Total Body Height'] = totalDistance;
+      distancesInCm['Eye to Top of Head'] =
+          distanceEyeToTopOfHead / _pixelsPerCm; // Add this line
+      if (totalDistance > 0 && totalDistance < 300) {
+        // สมมติว่าความสูงมนุษย์ทั่วไปอยู่ในช่วง 0-300 cm
+        distancesInCm['Total Body Height'] = totalDistance;
+      } else {
+        print("Calculated height is out of reasonable range.");
+      }
 
       // Print or update state with the total distance
       _personHeightCm = totalDistance;
