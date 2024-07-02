@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:hackathon/vision_detector_views/CaptureDetector.dart';
 import 'package:hackathon/vision_detector_views/UnifiedDetectorView.dart';
+import 'package:hackathon/vision_detector_views/objectDtectionFromImage.dart';
 import 'package:hackathon/vision_detector_views/object_detector_view.dart';
 import 'package:hackathon/vision_detector_views/pose_detector_view.dart';
 
@@ -44,7 +44,7 @@ class Home extends StatelessWidget {
             children: [
               CustomCard('Object Detection', ObjectDetectorView()),
               CustomCard('Pose Detection', PoseDetectorView()),
-              CustomCard('Height Measurement', PoseDetectorViewVersion2()),
+              CustomCard('Height Measurement', ObjectDetectionApp()),
               // UnifiedDetectorView
               CustomCard("Height Measurement real", UnifiedDetectorView()),
             ],
