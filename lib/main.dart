@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hackathon/vision_detector_views/CaptureDetector.dart';
 import 'package:hackathon/vision_detector_views/UnifiedDetectorView.dart';
 import 'package:hackathon/vision_detector_views/object_detector_view.dart';
 import 'package:hackathon/vision_detector_views/pose_detector_view.dart';
@@ -28,11 +29,26 @@ class Home extends StatelessWidget {
         centerTitle: true,
         elevation: 0,
       ),
+      // body: Center(
+      //   child: Padding(
+      //     padding: EdgeInsets.all(10),
+      //     child: Container(
+      //         child: CustomCard('Height Measurement', UnifiedDetectorView())),
+      //   ),
+      // ),
+
       body: Center(
         child: Padding(
           padding: EdgeInsets.all(10),
-          child: Container(
-              child: CustomCard('Height Measurement', UnifiedDetectorView())),
+          child: Column(
+            children: [
+              CustomCard('Object Detection', ObjectDetectorView()),
+              CustomCard('Pose Detection', PoseDetectorView()),
+              CustomCard('Height Measurement', PoseDetectorViewVersion2()),
+              // UnifiedDetectorView
+              CustomCard("Height Measurement real", UnifiedDetectorView()),
+            ],
+          ),
         ),
       ),
     );

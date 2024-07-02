@@ -28,7 +28,7 @@ class _UnifiedDetectorViewState extends State<UnifiedDetectorView> {
   var _cameraLensDirection = CameraLensDirection.back;
   Map<String, double> distancesInCm = {};
 
-  final double _ballDiameterCm = 20.5;
+  final double _ballDiameterCm = 22;
   double _pixelsPerCm = 0.0;
   double _personHeightCm = 0.00;
   @override
@@ -62,24 +62,24 @@ class _UnifiedDetectorViewState extends State<UnifiedDetectorView> {
             }),
           ),
           // Measurements display
-          Positioned(
-            bottom: 0,
-            left: 0,
-            right: 0,
-            child: Container(
-              height: 200, // Adjust height as necessary
-              padding: EdgeInsets.all(10),
-              color: Colors.black.withOpacity(0.7), // Semi-transparent
-              child: ListView(
-                children: distancesInCm.entries
-                    .map((entry) => Text(
-                          '${entry.key}: ${entry.value.toStringAsFixed(2)} cm',
-                          style: TextStyle(color: Colors.white, fontSize: 16),
-                        ))
-                    .toList(),
-              ),
-            ),
-          ),
+          // Positioned(
+          //   bottom: 0,
+          //   left: 0,
+          //   right: 0,
+          //   child: Container(
+          //     height: 200, // Adjust height as necessary
+          //     padding: EdgeInsets.all(10),
+          //     color: Colors.black.withOpacity(0.7), // Semi-transparent
+          //     child: ListView(
+          //       children: distancesInCm.entries
+          //           .map((entry) => Text(
+          //                 '${entry.key}: ${entry.value.toStringAsFixed(2)} cm',
+          //                 style: TextStyle(color: Colors.white, fontSize: 16),
+          //               ))
+          //           .toList(),
+          //     ),
+          //   ),
+          // ),
         ],
       ),
     );
@@ -154,7 +154,7 @@ class _UnifiedDetectorViewState extends State<UnifiedDetectorView> {
       // Check for the scaling object first
       for (var object in objects) {
         for (var label in object.labels) {
-          if (label.text.toLowerCase() == 'ball') {
+          if (label.text.toLowerCase().contains('ball')) {
             // ตรวจสอบเฉพาะคำว่า 'ball' เท่านั้น
             final ballBoundingBox = object.boundingBox;
             final ballDiameterInPixels =
