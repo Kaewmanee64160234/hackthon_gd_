@@ -28,7 +28,7 @@ class _UnifiedDetectorViewState extends State<UnifiedDetectorView> {
   var _cameraLensDirection = CameraLensDirection.back;
   Map<String, double> distancesInCm = {};
 
-  final double _ballDiameterCm = 20.5;
+  final double _ballDiameterCm = 22;
   double _pixelsPerCm = 0.0;
   double _personHeightCm = 0.00;
   @override
@@ -190,8 +190,24 @@ class _UnifiedDetectorViewState extends State<UnifiedDetectorView> {
           landmarks[PoseLandmarkType.nose]!.y);
       Point<double> leftMouth = Point(landmarks[PoseLandmarkType.leftMouth]!.x,
           landmarks[PoseLandmarkType.leftMouth]!.y);
+      Point<double> rightMouth = Point(landmarks[PoseLandmarkType.rightMouth]!.x,
+        landmarks[PoseLandmarkType.rightMouth]!.y);
       Point<double> leftEye = Point(landmarks[PoseLandmarkType.leftEye]!.x,
           landmarks[PoseLandmarkType.leftEye]!.y);
+      Point<double> rightEye = Point(landmarks[PoseLandmarkType.rightEye]!.x,
+        landmarks[PoseLandmarkType.rightEye]!.y);
+
+      // Extract landmark coordinates for side pose
+    Point<double> leftWrist = Point(landmarks[PoseLandmarkType.leftWrist]!.x,
+        landmarks[PoseLandmarkType.leftWrist]!.y);
+    Point<double> rightWrist = Point(
+        landmarks[PoseLandmarkType.rightWrist]!.x,
+        landmarks[PoseLandmarkType.rightWrist]!.y);
+    Point<double> leftElbow = Point(landmarks[PoseLandmarkType.leftElbow]!.x,
+        landmarks[PoseLandmarkType.leftElbow]!.y);
+    Point<double> rightElbow = Point(
+        landmarks[PoseLandmarkType.rightElbow]!.x,
+        landmarks[PoseLandmarkType.rightElbow]!.y);
 
       // Calculate distances directly between relevant points
       //
@@ -211,6 +227,8 @@ class _UnifiedDetectorViewState extends State<UnifiedDetectorView> {
           nose, leftShoulder); // Using vertical distance
       double distanceMouthEye = calculateVerticalDistance(
           leftMouth, leftEye); // Using vertical distance
+      double distanceRightMouthEye =
+        calculateVerticalDistance(rightMouth, rightEye);
       // double distanceNoseShoulder = calculateEuclideanDistance(
       //     nose, leftShoulder); // Assuming left shoulder as reference
       // double distanceMouthEye = calculateEuclideanDistance(leftMouth, leftEye);
@@ -234,6 +252,44 @@ class _UnifiedDetectorViewState extends State<UnifiedDetectorView> {
       // Convert to real-world units
       totalDistance /= _pixelsPerCm;
 
+      // Calculate distances for side pose
+    double distanceLeftWristElbow =
+        calculateEuclideanDistance(leftWrist, leftElbow);
+    double distanceRightWristElbow =
+        calculateEuclideanDistance(rightWrist, rightElbow);
+    double distanceLeftElbowHip =
+        calculateEuclideanDistance(leftElbow, leftHip);
+    double distanceRightElbowHip =
+        calculateEuclideanDistance(rightElbow, rightHip);
+
+    // Calculate average distances for symmetry
+    
+    double averageWristElbow =
+        (distanceLeftWristElbow + distanceRightWristElbow) / 2;
+    double averageElbowHip =
+        (distanceLeftElbowHip + distanceRightElbowHip) / 2;
+
+
+    // Calculate the height from mouth to eye using either left or right side
+    double averageMouthEye = (distanceMouthEye + distanceRightMouthEye) / 2;
+
+    // Total height estimation
+    double totalDistanceOnTheSide = averageAnkleKnee +
+        averageKneeHip +
+        averageHipShoulder +
+        distanceNoseShoulder +
+        averageMouthEye +
+        distanceEyeToTopOfHead;
+
+    // Convert to real-world units
+    totalDistanceOnTheSide /= _pixelsPerCm;
+
+    // Determine if the pose is side or front
+    bool isSidePose = (landmarks[PoseLandmarkType.leftEar] == null) ||
+                      (landmarks[PoseLandmarkType.rightEar] == null);
+
+    double finalHeight = isSidePose ? totalDistanceOnTheSide : totalDistance;
+
       // Save distances in cm
       distancesInCm['Left Ankle to Left Knee'] =
           distanceLeftAnkleKnee / _pixelsPerCm;
@@ -251,19 +307,34 @@ class _UnifiedDetectorViewState extends State<UnifiedDetectorView> {
       distancesInCm['Mouth to Eye'] = distanceMouthEye / _pixelsPerCm;
       distancesInCm['Eye to Top of Head'] =
           distanceEyeToTopOfHead / _pixelsPerCm; // Add this line
-      if (totalDistance > 0 && totalDistance < 300) {
-        // สมมติว่าความสูงมนุษย์ทั่วไปอยู่ในช่วง 0-300 cm
-        distancesInCm['Total Body Height'] = totalDistance;
-      } else {
-        print("Calculated height is out of reasonable range.");
-      }
+       distancesInCm['Left Mouth to Left Eye'] =
+        distanceMouthEye / _pixelsPerCm;
+    distancesInCm['Right Mouth to Right Eye'] =
+        distanceRightMouthEye / _pixelsPerCm;
+    distancesInCm['Eye to Top of Head'] =
+        distanceEyeToTopOfHead / _pixelsPerCm;
+    distancesInCm['Left Wrist to Left Elbow'] =
+        distanceLeftWristElbow / _pixelsPerCm;
+    distancesInCm['Right Wrist to Right Elbow'] =
+        distanceRightWristElbow / _pixelsPerCm;
+    distancesInCm['Left Elbow to Left Hip'] =
+        distanceLeftElbowHip / _pixelsPerCm;
+    distancesInCm['Right Elbow to Right Hip'] =
+        distanceRightElbowHip / _pixelsPerCm;
+    distancesInCm['Total Body Height'] = finalHeight;
 
-      // Print or update state with the total distance
-      _personHeightCm = totalDistance;
-      print("Estimated height: ${_personHeightCm.toStringAsFixed(2)} cm");
-    } else {
-      print("No poses or objects detected.");
+    if (finalHeight > 0 && finalHeight < 300) {
+      distancesInCm['Total Body Height'] = finalHeight;
+    } else if (!isSidePose && totalDistanceOnTheSide > 0 && totalDistanceOnTheSide < 300) {
+      // Fallback to side pose calculation if front pose fails
+      distancesInCm['Total Body Height'] = totalDistanceOnTheSide;
     }
+
+    _personHeightCm = distancesInCm['Total Body Height'] ?? 0.0;
+    print("Estimated height: ${_personHeightCm.toStringAsFixed(2)} cm");
+  } else {
+    print("No poses or objects detected.");
+  }
     setState(() {});
   }
 
