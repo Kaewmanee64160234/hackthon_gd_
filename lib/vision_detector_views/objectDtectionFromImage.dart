@@ -290,17 +290,17 @@ class _ObjectDetectionHomeState extends State<ObjectDetectionHome> {
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   child: ElevatedButton(
                     onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => CameraViewForHeight(
-                            customPaint: null,
-                            onImageCaptured: (XFile file) {
-                              _onImageTaken(file);
-                            },
-                          ),
-                        ),
-                      );
+                      // Navigator.push(
+                      //   context,
+                      //   MaterialPageRoute(
+                      //     builder: (context) => CameraViewForHeight(
+                      //       customPaint: null,
+                      //       onImageCaptured: (XFile file) {
+                      //         _onImageTaken(file);
+                      //       },
+                      //     ),
+                      //   ),
+                      // );
                     },
                     child: Text('Take Photo'),
                     style: ElevatedButton.styleFrom(

@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:google_ml_kit/google_ml_kit.dart';
 import 'package:google_mlkit_object_detection/google_mlkit_object_detection.dart';
 import 'package:google_mlkit_pose_detection/google_mlkit_pose_detection.dart';
+import 'package:hackathon/vision_detector_views/detector_viewForHeight.dart';
 import 'package:hackathon/vision_detector_views/painters/object_detector_painter.dart';
 import 'package:hackathon/vision_detector_views/painters/pose_painter.dart';
 import 'package:hackathon/vision_detector_views/utils.dart';
@@ -51,7 +52,7 @@ class _UnifiedDetectorViewState extends State<UnifiedDetectorView> {
         children: [
           // Background camera and detections view
 
-          DetectorView(
+          DetectorViewForHeight(
             title: 'Unified Detector',
             customPaint: _customPaint,
             text: 'Detection Results',
@@ -62,6 +63,23 @@ class _UnifiedDetectorViewState extends State<UnifiedDetectorView> {
             }),
           ),
           // Measurements display
+          // show only height
+          Positioned(
+            left: 0,
+            top: 100,
+            right: 0,
+            child: Container(
+              height: 60, // Adjust height as necessary
+              padding: EdgeInsets.all(10),
+              color: Colors.black.withOpacity(0.7), // Semi-transparent
+              child: Center(
+                child: Text(
+                  'Estimated Height: ${_personHeightCm.toStringAsFixed(2)} cm',
+                  style: TextStyle(color: Colors.white, fontSize: 20),
+                ),
+              ),
+            ),
+          ),
           // Positioned(
           //   bottom: 0,
           //   left: 0,
