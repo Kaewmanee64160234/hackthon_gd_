@@ -1,5 +1,6 @@
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
+import 'package:google_ml_kit/google_ml_kit.dart';
 import 'package:google_mlkit_commons/google_mlkit_commons.dart';
 import 'package:hackathon/vision_detector_views/camera_view.dart';
 import 'camera_viewForHeight.dart';
@@ -54,6 +55,7 @@ class _DetectorViewState extends State<DetectorViewForHeight> {
             onDetectorViewModeChanged: _onDetectorViewModeChanged,
             initialCameraLensDirection: widget.initialCameraLensDirection,
             onCameraLensDirectionChanged: widget.onCameraLensDirectionChanged,
+            onImageCaptured: _onImageCaptured,
           )
         : GalleryView(
             title: widget.title,
@@ -74,7 +76,7 @@ class _DetectorViewState extends State<DetectorViewForHeight> {
     });
   }
 
-  void _onImageCaptured(XFile file) async {
+  void _onImageCaptured(InputImage inputImage, XFile file) async {
     final inputImage = InputImage.fromFilePath(file.path);
     widget.onImage(inputImage);
   }
