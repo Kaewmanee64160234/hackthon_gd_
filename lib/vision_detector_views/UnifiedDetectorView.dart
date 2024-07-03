@@ -226,7 +226,6 @@ class _UnifiedDetectorViewState extends State<UnifiedDetectorView> {
           landmarks[PoseLandmarkType.nose]!.y);
       Point<double> leftMouth = Point(landmarks[PoseLandmarkType.leftMouth]!.x,
           landmarks[PoseLandmarkType.leftMouth]!.y);
-
       Point<double> rightMouth = Point(
           landmarks[PoseLandmarkType.rightMouth]!.x,
           landmarks[PoseLandmarkType.rightMouth]!.y);
@@ -247,7 +246,6 @@ class _UnifiedDetectorViewState extends State<UnifiedDetectorView> {
           landmarks[PoseLandmarkType.rightElbow]!.x,
           landmarks[PoseLandmarkType.rightElbow]!.y);
 
-
       // Calculate distances directly between relevant points
       //
       double distanceLeftAnkleKnee =
@@ -267,11 +265,7 @@ class _UnifiedDetectorViewState extends State<UnifiedDetectorView> {
       double distanceMouthEye = calculateVerticalDistance(
           leftMouth, leftEye); // Using vertical distance
       double distanceRightMouthEye =
-
           calculateVerticalDistance(rightMouth, rightEye);
-
-        calculateVerticalDistance(rightMouth, rightEye);
-
       // double distanceNoseShoulder = calculateEuclideanDistance(
       //     nose, leftShoulder); // Assuming left shoulder as reference
       // double distanceMouthEye = calculateEuclideanDistance(leftMouth, leftEye);
@@ -328,44 +322,6 @@ class _UnifiedDetectorViewState extends State<UnifiedDetectorView> {
       }
       double finalHeight = isSidePose ? totalDistanceOnTheSide : totalDistance;
 
-      // Calculate distances for side pose
-    double distanceLeftWristElbow =
-        calculateEuclideanDistance(leftWrist, leftElbow);
-    double distanceRightWristElbow =
-        calculateEuclideanDistance(rightWrist, rightElbow);
-    double distanceLeftElbowHip =
-        calculateEuclideanDistance(leftElbow, leftHip);
-    double distanceRightElbowHip =
-        calculateEuclideanDistance(rightElbow, rightHip);
-
-    // Calculate average distances for symmetry
-    
-    double averageWristElbow =
-        (distanceLeftWristElbow + distanceRightWristElbow) / 2;
-    double averageElbowHip =
-        (distanceLeftElbowHip + distanceRightElbowHip) / 2;
-
-
-    // Calculate the height from mouth to eye using either left or right side
-    double averageMouthEye = (distanceMouthEye + distanceRightMouthEye) / 2;
-
-    // Total height estimation
-    double totalDistanceOnTheSide = averageAnkleKnee +
-        averageKneeHip +
-        averageHipShoulder +
-        distanceNoseShoulder +
-        averageMouthEye +
-        distanceEyeToTopOfHead;
-
-    // Convert to real-world units
-    totalDistanceOnTheSide /= _pixelsPerCm;
-
-    // Determine if the pose is side or front
-    bool isSidePose = (landmarks[PoseLandmarkType.leftEar] == null) ||
-                      (landmarks[PoseLandmarkType.rightEar] == null);
-
-    double finalHeight = isSidePose ? totalDistanceOnTheSide : totalDistance;
-
       // Save distances in cm
       distancesInCm['Left Ankle to Left Knee'] =
           distanceLeftAnkleKnee / _pixelsPerCm;
@@ -383,7 +339,6 @@ class _UnifiedDetectorViewState extends State<UnifiedDetectorView> {
       distancesInCm['Mouth to Eye'] = distanceMouthEye / _pixelsPerCm;
       distancesInCm['Eye to Top of Head'] =
           distanceEyeToTopOfHead / _pixelsPerCm; // Add this line
-
       distancesInCm['Left Mouth to Left Eye'] = distanceMouthEye / _pixelsPerCm;
       distancesInCm['Right Mouth to Right Eye'] =
           distanceRightMouthEye / _pixelsPerCm;
@@ -412,14 +367,7 @@ class _UnifiedDetectorViewState extends State<UnifiedDetectorView> {
       print("Estimated height: ${_personHeightCm.toStringAsFixed(2)} cm, ");
     } else {
       print("No poses or objects detected.");
-
     }
-
-    _personHeightCm = distancesInCm['Total Body Height'] ?? 0.0;
-    print("Estimated height: ${_personHeightCm.toStringAsFixed(2)} cm");
-  } else {
-    print("No poses or objects detected.");
-  }
     setState(() {});
   }
 
@@ -459,7 +407,7 @@ class _UnifiedDetectorViewState extends State<UnifiedDetectorView> {
         _isBusy = false;
       }
     }
-  
+  }
 }
 
 class CombinedPainter extends CustomPainter {
