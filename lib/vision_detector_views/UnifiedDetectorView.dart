@@ -53,43 +53,53 @@ class _UnifiedDetectorViewState extends State<UnifiedDetectorView> {
     return Scaffold(
       body: Stack(
         children: [
-          DetectorViewForHeight(
-            title: 'Unified Detector',
-            customPaint: _customPaint,
-            text: 'Detection Results',
-            initialCameraLensDirection: _cameraLensDirection,
-            onCameraLensDirectionChanged: (value) => setState(() {
-              _cameraLensDirection = value;
-            }),
-            onImage: _processImage,
-          ),
-          Positioned(
-            left: 0,
-            top: 100,
-            right: 0,
-            child: Container(
-              height: 60,
-              padding: EdgeInsets.all(10),
-              color: Colors.black.withOpacity(0.7),
-              child: Center(
-                child: Text(
-                  'Estimated Height: ${_personHeightCm.toStringAsFixed(2)} cm ${posePosition}',
-                  style: TextStyle(color: Colors.white, fontSize: 20),
+          Column(
+            children: [
+              Expanded(
+                child: DetectorViewForHeight(
+                  title: 'Unified Detector',
+                  customPaint: _customPaint,
+                  text: 'Detection Results',
+                  initialCameraLensDirection: _cameraLensDirection,
+                  onCameraLensDirectionChanged: (value) => setState(() {
+                    _cameraLensDirection = value;
+                  }),
+                  onImage: _processImage,
                 ),
               ),
-            ),
-          ),
-          Positioned(
-            top: 16,
-            right: 16,
-            child: ElevatedButton(
-              onPressed: () {
-                setState(() {
-                  posePosition = posePosition == 'front' ? 'side' : 'front';
-                });
-              },
-              child: Text('Toggle Pose Position'),
-            ),
+              Container(
+                height: 60,
+                padding: EdgeInsets.all(10),
+                color: Colors.black.withOpacity(0.7),
+                child: Center(
+                  child: Text(
+                    'Estimated Height: ${_personHeightCm.toStringAsFixed(2)} cm (${posePosition.toUpperCase()})',
+                    style: TextStyle(color: Colors.white, fontSize: 20),
+                  ),
+                ),
+              ),
+              SizedBox(height: 10),
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: ElevatedButton(
+                  onPressed: () {
+                    setState(() {
+                      posePosition = posePosition == 'front' ? 'side' : 'front';
+                    });
+                  },
+                  style: ElevatedButton.styleFrom(
+                    padding: EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  child: Text(
+                    'Toggle Pose Position',
+                    style: TextStyle(fontSize: 18),
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ),

@@ -29,14 +29,6 @@ class Home extends StatelessWidget {
         centerTitle: true,
         elevation: 0,
       ),
-      // body: Center(
-      //   child: Padding(
-      //     padding: EdgeInsets.all(10),
-      //     child: Container(
-      //         child: CustomCard('Height Measurement', UnifiedDetectorView())),
-      //   ),
-      // ),
-
       body: Center(
         child: Padding(
           padding: EdgeInsets.all(10),
