@@ -191,7 +191,6 @@ class _UnifiedDetectorViewState extends State<UnifiedDetectorView> {
       for (var object in objects) {
         for (var label in object.labels) {
           if (label.text.toLowerCase() == 'ball') {
-            // ตรวจสอบเฉพาะคำว่า 'ball' เท่านั้น
             final ballBoundingBox = object.boundingBox;
             final ballDiameterInPixels =
                 min(ballBoundingBox.height, ballBoundingBox.width);
@@ -247,7 +246,6 @@ class _UnifiedDetectorViewState extends State<UnifiedDetectorView> {
           landmarks[PoseLandmarkType.rightElbow]!.y);
 
       // Calculate distances directly between relevant points
-      //
       double distanceLeftAnkleKnee =
           calculateEuclideanDistance(leftAnkle, leftKnee);
       double distanceRightAnkleKnee =
@@ -260,24 +258,12 @@ class _UnifiedDetectorViewState extends State<UnifiedDetectorView> {
           calculateEuclideanDistance(leftHip, leftShoulder);
       double distanceRightHipShoulder =
           calculateEuclideanDistance(rightHip, rightShoulder);
-      double distanceNoseShoulder = calculateVerticalDistance(
-          nose, leftShoulder); // Using vertical distance
       double distanceMouthEye = calculateVerticalDistance(
           leftMouth, leftEye); // Using vertical distance
       double distanceRightMouthEye =
           calculateVerticalDistance(rightMouth, rightEye);
-      // double distanceNoseShoulder = calculateEuclideanDistance(
-      //     nose, leftShoulder); // Assuming left shoulder as reference
-      // double distanceMouthEye = calculateEuclideanDistance(leftMouth, leftEye);
       double distanceNoseToEye = calculateVerticalDistance(nose, leftEye);
       double distanceEyeToTopOfHead = distanceNoseToEye * 2;
-
-      // Calculate average distances for symmetry
-      double averageAnkleKnee =
-          (distanceLeftAnkleKnee + distanceRightAnkleKnee) / 2;
-      double averageKneeHip = (distanceLeftKneeHip + distanceRightKneeHip) / 2;
-      double averageHipShoulder =
-          (distanceLeftHipShoulder + distanceRightHipShoulder) / 2;
 
       // Calculate distances for side pose
       double distanceLeftWristElbow =
@@ -288,34 +274,47 @@ class _UnifiedDetectorViewState extends State<UnifiedDetectorView> {
           calculateEuclideanDistance(leftElbow, leftHip);
       double distanceRightElbowHip =
           calculateEuclideanDistance(rightElbow, rightHip);
+      //
+      // Calculate the distance from the nose to the shoulder
+      double distanceNoseShoulder =
+          calculateVerticalDistance(nose, leftShoulder);
 
-      // Calculate average distances for symmetry
+      // Calculate the midpoint between the left and right shoulders
+      Point<double> centerShoulder = Point(
+        (leftShoulder.x + rightShoulder.x) / 2,
+        (leftShoulder.y + rightShoulder.y) / 2,
+      );
 
-      // Calculate the height from mouth to eye using either left or right side
-      double averageMouthEye = (distanceMouthEye + distanceRightMouthEye) / 2;
+      // Calculate vertical distance from the center shoulder to the nose
+      double distanceCenterShoulderToNose =
+          calculateVerticalDistance(centerShoulder, nose);
 
-      double totalDistance = 0;
-      double totalDistanceOnTheSide = 0;
       // Determine if the pose is side or front
       bool isSidePose = posePosition == 'side';
+
+      // Calculate the total height using the longer side for each segment
+      double totalDistance = 0;
+      double totalDistanceOnTheSide = 0;
+
       if (!isSidePose) {
         // Total height estimation
-        totalDistance = averageAnkleKnee +
-            averageKneeHip +
-            averageHipShoulder +
-            distanceNoseShoulder +
+        totalDistance = max(distanceLeftAnkleKnee, distanceRightAnkleKnee) +
+            max(distanceLeftKneeHip, distanceRightKneeHip) +
+            max(distanceLeftHipShoulder, distanceRightHipShoulder) +
+            distanceCenterShoulderToNose +
             distanceMouthEye +
-            distanceEyeToTopOfHead; // Add this line
+            distanceEyeToTopOfHead;
         // Convert to real-world units
         totalDistance /= _pixelsPerCm;
       } else {
         // Total height estimation
-        totalDistanceOnTheSide = averageAnkleKnee +
-            averageKneeHip +
-            averageHipShoulder +
-            distanceNoseShoulder +
-            averageMouthEye +
-            distanceEyeToTopOfHead;
+        totalDistanceOnTheSide =
+            max(distanceLeftAnkleKnee, distanceRightAnkleKnee) +
+                max(distanceLeftKneeHip, distanceRightKneeHip) +
+                max(distanceLeftHipShoulder, distanceRightHipShoulder) +
+                distanceNoseShoulder +
+                distanceMouthEye +
+                distanceEyeToTopOfHead;
 
         // Convert to real-world units
         totalDistanceOnTheSide /= _pixelsPerCm;
@@ -335,7 +334,8 @@ class _UnifiedDetectorViewState extends State<UnifiedDetectorView> {
           distanceLeftHipShoulder / _pixelsPerCm;
       distancesInCm['Right Hip to Right Shoulder'] =
           distanceRightHipShoulder / _pixelsPerCm;
-      distancesInCm['Nose to Shoulder'] = distanceNoseShoulder / _pixelsPerCm;
+      distancesInCm['Nose to Center Shoulder'] =
+          distanceCenterShoulderToNose / _pixelsPerCm;
       distancesInCm['Mouth to Eye'] = distanceMouthEye / _pixelsPerCm;
       distancesInCm['Eye to Top of Head'] =
           distanceEyeToTopOfHead / _pixelsPerCm; // Add this line
