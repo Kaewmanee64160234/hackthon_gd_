@@ -19,7 +19,7 @@ class UnifiedDetectorView extends StatefulWidget {
   @override
   State<StatefulWidget> createState() => _UnifiedDetectorViewState();
 }
-
+//
 class _UnifiedDetectorViewState extends State<UnifiedDetectorView> {
   final PoseDetector _poseDetector =
       PoseDetector(options: PoseDetectorOptions());
