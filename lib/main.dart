@@ -23,6 +23,9 @@ class MyApp extends StatelessWidget {
 class Home extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final double screenWidth = MediaQuery.of(context).size.width;
+    final double screenHeight = MediaQuery.of(context).size.height;
+
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -35,27 +38,28 @@ class Home extends StatelessWidget {
       ),
       body: Center(
         child: Padding(
-          padding: EdgeInsets.all(10),
-          child: Column(
-            children: [
-              CustomCard(
-                'Live Measurement',
-                UnifiedDetectorView(),
-                imageUrl:
-                    'https://img5.pic.in.th/file/secure-sv1/16fade08659b8e6b0.jpg',
-              ),
-              CustomCard(
-                'Pick a Photo',
-                ObjectDetectionApp(),
-                imageUrl:
-                    'https://img5.pic.in.th/file/secure-sv1/200d5e9119519cfc3.jpg',
-              ),
-              // CustomCard('Object Detection', ObjectDetectorView(),),
-              // CustomCard('Pose Detection', PoseDetectorView()),
-              // CustomCard('Height Measurement', ObjectDetectionApp()),
-              // // UnifiedDetectorView
-              // CustomCard("Height Measurement real", UnifiedDetectorView()),
-            ],
+          padding: EdgeInsets.all(screenWidth * 0.03),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              return Column(
+                children: [
+                  CustomCard(
+                    'Live Measurement',
+                    UnifiedDetectorView(),
+                    imageUrl:
+                        'https://img5.pic.in.th/file/secure-sv1/16fade08659b8e6b0.jpg',
+                    maxWidth: constraints.maxWidth,
+                  ),
+                  CustomCard(
+                    'Pick a Photo',
+                    ObjectDetectionApp(),
+                    imageUrl:
+                        'https://img5.pic.in.th/file/secure-sv1/200d5e9119519cfc3.jpg',
+                    maxWidth: constraints.maxWidth,
+                  ),
+                ],
+              );
+            },
           ),
         ),
       ),
@@ -68,8 +72,13 @@ class CustomCard extends StatelessWidget {
   final Widget _viewPage;
   final bool featureCompleted;
   final String imageUrl;
+  final double maxWidth;
+
   const CustomCard(this._label, this._viewPage,
-      {this.featureCompleted = true, required this.imageUrl});
+      {this.featureCompleted = true,
+      required this.imageUrl,
+      required this.maxWidth});
+
   @override
   Widget build(BuildContext context) {
     return Card(
@@ -88,20 +97,27 @@ class CustomCard extends StatelessWidget {
         },
         child: Column(
           children: [
-            Image.network(imageUrl), // Display the image
+            Image.network(
+              imageUrl,
+              width: maxWidth,
+              height: maxWidth *
+                  0.6, // Adjust height based on the width to maintain aspect ratio
+              fit: BoxFit.cover,
+            ),
             Row(
               children: [
                 Expanded(
                   child: Container(
                     color: Theme.of(context).primaryColor,
-                    padding: EdgeInsets.all(20.0),
+                    padding:
+                        EdgeInsets.symmetric(vertical: 20.0, horizontal: 10.0),
                     child: Text(
                       _label,
                       style: TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
                           fontSize: 20),
-                      textAlign: TextAlign.center, // Center the text
+                      textAlign: TextAlign.center,
                     ),
                   ),
                 ),
