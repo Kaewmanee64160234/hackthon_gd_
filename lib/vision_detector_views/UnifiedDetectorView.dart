@@ -92,10 +92,11 @@ class _UnifiedDetectorViewState extends State<UnifiedDetectorView> {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10),
                     ),
+                    backgroundColor: Colors.purple
                   ),
                   child: Text(
                     'Toggle Pose Position',
-                    style: TextStyle(fontSize: 18),
+                    style: TextStyle(fontSize: 18,color: Colors.white),
                   ),
                 ),
               ),

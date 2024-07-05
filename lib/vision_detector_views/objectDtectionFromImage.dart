@@ -305,7 +305,11 @@ class _ObjectDetectionHomeState extends State<ObjectDetectionHome> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Object and Pose Detection'),
+        title: Text(
+          'Measure from Image',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
+        backgroundColor: Colors.purple,
       ),
       body: Stack(
         fit: StackFit.expand,
@@ -340,37 +344,76 @@ class _ObjectDetectionHomeState extends State<ObjectDetectionHome> {
           Positioned(
             bottom: 16,
             left: 16,
-            child: ElevatedButton(
-              onPressed: _pickImage,
-              child: Text('Pick Image'),
-              style: ElevatedButton.styleFrom(
-                padding: EdgeInsets.symmetric(vertical: 16),
-                textStyle: TextStyle(fontSize: 18),
+            child: Container(
+              width: 130,
+              child: ElevatedButton(
+                onPressed: _pickImage,
+                child: Text(
+                  'Pick Image',
+                  style: TextStyle(color: Colors.white),
+                ),
+                style: ElevatedButton.styleFrom(
+                    padding: EdgeInsets.symmetric(vertical: 16),
+                    textStyle: TextStyle(fontSize: 18),
+                    backgroundColor: Colors.purple),
               ),
             ),
           ),
           Positioned(
             bottom: 16,
             right: 16,
-            child: ElevatedButton(
-              onPressed: _refreshDetection,
-              child: Text('Refresh Detection'),
-              style: ElevatedButton.styleFrom(
-                padding: EdgeInsets.symmetric(vertical: 16),
-                textStyle: TextStyle(fontSize: 18),
+            child: Container(
+              width: 160,
+              child: ElevatedButton(
+                onPressed: _refreshDetection,
+                child: Text(
+                  'Refresh Detection',
+                  style: TextStyle(color: Colors.white),
+                ),
+                style: ElevatedButton.styleFrom(
+                    padding: EdgeInsets.symmetric(vertical: 16),
+                    textStyle: TextStyle(fontSize: 18),
+                    backgroundColor: Colors.purple),
               ),
             ),
           ),
+          // Positioned(
+          //   top: 50,
+          //   right: 16,
+          //   child: ElevatedButton(
+          //     onPressed: () {
+          //       setState(() {
+          //         posePosition = posePosition == 'front' ? 'side' : 'front';
+          //       });
+          //     },
+          //     child: Text('Toggle Pose Position'),
+          //   ),
+          // ),
+
           Positioned(
-            top: 50,
-            right: 16,
-            child: ElevatedButton(
-              onPressed: () {
-                setState(() {
-                  posePosition = posePosition == 'front' ? 'side' : 'front';
-                });
-              },
-              child: Text('Toggle Pose Position'),
+            bottom: 75,
+            left: 0,
+            right: 0,
+            child: Align(
+              alignment: Alignment.center,
+              child: Container(
+                width: 400,
+                child: ElevatedButton(
+                  onPressed: () {
+                    setState(() {
+                      posePosition = posePosition == 'front' ? 'side' : 'front';
+                    });
+                  },
+                  child: Text(
+                    'Toggle Pose Position',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      textStyle: TextStyle(fontSize: 18),
+                      backgroundColor: Colors.purple),
+                ),
+              ),
             ),
           ),
         ],
